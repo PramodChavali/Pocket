@@ -1,17 +1,33 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Pocket.MainWindow"
+		Width ="800" Height ="600"
+		CanResize="True"
         Title="Pocket">
+		
 
 	<Grid>
-		<TextBlock Text="Pocket Client" FontSize="20"/>
-		<Button Name="JoinButton" Content="Join Session" HorizontalAlignment ="Center" VerticalAlignment ="Bottom"/>
-		<TextBlock Name="StatusText" Text="Not connected"/>
+		<!-- 2 rows: top auto-height, bottom fills remaining -->
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="*"/>
+			<RowDefinition Height="Auto"/>
+		</Grid.RowDefinitions>
+
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width ="*"/>
+			<ColumnDefinition Width ="*"/>
+			<ColumnDefinition Width ="*"/>
+		</Grid.ColumnDefinitions>
+
+		<!-- Top row: title -->
+		<TextBlock Grid.Row="0" Grid.Column="1" Text="Pocket" FontSize="20" HorizontalAlignment ="Center"/>
+
+		<!-- Bottom row: button -->
+		<Button Grid.Row="2" Grid.Column="1" Name="JoinButton" Content="Join Session" HorizontalAlignment ="Center"/>
+		<TextBlock Name ="StatusText" Grid.Row="0" Grid.Column="1" Text="Not Connected" FontSize="20" HorizontalAlignment ="Center"/>
 	</Grid>
-
-
 
 </Window>
