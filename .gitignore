@@ -32,3 +32,4 @@ Thumbs.db
 
 # Avalonia-specific
 *.xaml.g.cs      # generated code-behind files from XAML
+

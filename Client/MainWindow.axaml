@@ -27,7 +27,7 @@
 
 		<!-- Bottom row: button -->
 		<Button Grid.Row="2" Grid.Column="1" Name="JoinButton" Content="Join Session" HorizontalAlignment ="Center"/>
-		<TextBlock Name ="StatusText" Grid.Row="0" Grid.Column="1" Text="Not Connected" FontSize="20" HorizontalAlignment ="Center"/>
+		<TextBlock Name ="StatusText" Grid.Row="3" Grid.Column="1" Text="Not Connected" FontSize="20" HorizontalAlignment ="Center"/>
 	</Grid>
 
 </Window>
