@@ -1,65 +1,221 @@
+﻿using Avalonia.Controls;
+using Avalonia.Threading;
+using NAudio.Wave;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using Avalonia.Controls;
-using NAudio.Wave;
 
-namespace Pocket
+namespace Pocket;
+
+public partial class MainWindow : Window
 {
-    public partial class MainWindow : Window
+    private List<Control> allViews;
+    private PocketServer _server; // Add this field
+
+    public enum EView
     {
-        private WaveInEvent micInput;
-        private WaveOutEvent serverOutput;
-        private BufferedWaveProvider audioQueue;
-        private TcpClient server;
-        private NetworkStream audioStream;
+        MainMenuView = 0,
+        HostSetupView,
+        HostLobbyView,
+        JoinLobbyView
+    }
 
-        public MainWindow()
+    public MainWindow()
+    {
+        InitializeComponent();
+        InitializeViews();
+        HostButton.Click += OnHostButtonClick;
+        CreateSessionButton.Click += StartLocalServer;
+        JoinButton.Click += OnJoinButtonClick;
+        SettingsButton.Click += OnSettingsButtonClick;
+        QuitButton.Click += OnQuitButtonClick;
+        //back buttons
+        HostSetupBackButton.Click += BackToMenu;
+        JoinBackButton.Click += BackToMenu;
+        StopSessionButton.Click += StopServer; // Update this line
+    }
+
+    // Update the BackToMenu method for StopSessionButton
+    private void BackToMenu(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        SetCurrentView(EView.MainMenuView);
+        // Clear form fields when going back
+        if (sender == HostSetupBackButton)
         {
-            InitializeComponent();
-            JoinButton.Click += OnJoinClick;
+            LobbyNameTextBox.Text = "";
+            PasswordTextBox.Text = "";
+        }
+    }
+
+    // New method specifically for stopping the server
+    private void StopServer(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        _server?.Stop();
+        _server = null;
+
+        // Clear participants list
+        ParticipantsListBox.Items.Clear();
+
+        // Update status and return to main menu
+        StatusText.Text = "Server stopped";
+        SetCurrentView(EView.MainMenuView);
+    }
+
+    private void OnQuitButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        // Clean up server before quitting
+        _server?.Stop();
+        Close();
+    }
+
+    private void OnSettingsButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void OnJoinButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        SetCurrentView(EView.JoinLobbyView);
+    }
+
+    private async void StartLocalServer(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        // Grab the name and password
+        string lobbyName = LobbyNameTextBox.Text?.Trim();
+        string lobbyPassword = PasswordTextBox.Text?.Trim();
+
+        // Validate input
+        if (string.IsNullOrEmpty(lobbyName))
+        {
+            StatusText.Text = "Please enter a session name";
+            return;
         }
 
-        private async void OnJoinClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+        try
         {
-            await StartAudioLoopback();
+            // Disable button and show loading state
+            CreateSessionButton.IsEnabled = false;
+            CreateSessionButton.Content = "Starting...";
+            StatusText.Text = "Starting session...";
+
+            // Create and start server
+            _server = new PocketServer(lobbyName, lobbyPassword);
+
+            // Wire up server events
+            _server.ParticipantJoined += OnParticipantJoined;
+            _server.ParticipantLeft += OnParticipantLeft;
+            _server.StatusUpdate += OnStatusUpdate;
+
+            // Start the server
+            await _server.StartAsync();
+
+            // Update lobby info
+            LobbyInfoText.Text = $"Session: {lobbyName}";
+            if (!string.IsNullOrEmpty(lobbyPassword))
+            {
+                LobbyInfoText.Text += " (Password Protected)";
+            }
+
+            // Switch to lobby view
+            SetCurrentView(EView.HostLobbyView);
+
+            StatusText.Text = "Session ready - waiting for participants";
         }
-
-        private async Task StartAudioLoopback()
+        catch (Exception ex)
         {
-            // connect to server
-            server = new TcpClient();
-            await server.ConnectAsync("127.0.0.1", 5000); // later replace with Pi IP
-            audioStream = server.GetStream();
+            // Handle startup errors
+            CreateSessionButton.Content = "Create Session";
+            CreateSessionButton.IsEnabled = true;
+            StatusText.Text = $"Failed to start session: {ex.Message}";
 
-            // setup mic capture
-            micInput = new WaveInEvent();
-            micInput.WaveFormat = new WaveFormat(44100, 16, 1); // 44.1kHz mono
-            micInput.DataAvailable += async (s, a) =>
+            // Clean up failed server
+            _server?.Stop();
+            _server = null;
+        }
+    }
+
+    // Server event handlers
+    private void OnParticipantJoined(string participant)
+    {
+        // Update UI on main thread
+        Dispatcher.UIThread.Post(() =>
+        {
+            ParticipantsListBox.Items.Add($"🟢 {participant}");
+        });
+    }
+
+    private void OnParticipantLeft(string participant)
+    {
+        // Update UI on main thread
+        Dispatcher.UIThread.Post(() =>
+        {
+            // Find and remove the participant
+            for (int i = 0; i < ParticipantsListBox.Items.Count; i++)
             {
-                // send mic bytes to server
-                await audioStream.WriteAsync(a.Buffer, 0, a.BytesRecorded);
-            };
-            micInput.StartRecording();
-
-            // setup playback
-            audioQueue = new BufferedWaveProvider(micInput.WaveFormat);
-            serverOutput = new WaveOutEvent();
-            serverOutput.Init(audioQueue);
-            serverOutput.Play();
-
-            // read echoed audio from server
-            _ = Task.Run(async () =>
-            {
-                var buffer = new byte[4096];
-                while (true)
+                var item = ParticipantsListBox.Items[i]?.ToString();
+                if (item?.Contains(participant) == true)
                 {
-                    int bytesRead = await audioStream.ReadAsync(buffer, 0, buffer.Length);
-                    if (bytesRead > 0)
-                        audioQueue.AddSamples(buffer, 0, bytesRead);
+                    ParticipantsListBox.Items.RemoveAt(i);
+                    break;
                 }
-            });
+            }
+        });
+    }
+
+    private void OnStatusUpdate(string status)
+    {
+        // Update UI on main thread
+        Dispatcher.UIThread.Post(() =>
+        {
+            StatusText.Text = status;
+        });
+    }
+
+    private void OnHostButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        SetCurrentView(EView.HostSetupView);
+    }
+
+    private void SetCurrentView(EView targetView)
+    {
+        foreach (Control view in allViews)
+        {
+            if (view != allViews[(int)targetView])
+            {
+                view.IsVisible = false;
+            }
+            else
+            {
+                view.IsVisible = true;
+            }
         }
+
+        // Reset button state when switching views
+        if (targetView == EView.HostSetupView)
+        {
+            CreateSessionButton.IsEnabled = true;
+            CreateSessionButton.Content = "Create Session";
+        }
+    }
+
+    private void InitializeViews()
+    {
+        allViews = new List<Control>
+        {
+            MainMenuView,
+            HostSetupView,
+            HostLobbyView,
+            JoinLobbyView
+        };
+    }
+
+    // Clean up when window closes
+    protected override void OnClosed(EventArgs e)
+    {
+        _server?.Stop();
+        base.OnClosed(e);
     }
 }

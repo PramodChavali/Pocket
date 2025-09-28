@@ -1,33 +1,208 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Pocket.MainWindow"
-		Width ="800" Height ="600"
-		CanResize="True"
-        Title="Pocket">
-		
+        Width="800" Height="600"
+        CanResize="True"
+        Title="Pocket"
+        Background="#2A1A40">
+	<!-- softer dark purple -->
+	<!-- Global styles -->
+	<Window.Styles>
+		<!-- Base button style -->
+		<Style Selector="Button">
+			<Setter Property="Width" Value="240"/>
+			<Setter Property="Height" Value="52"/>
+			<Setter Property="FontSize" Value="16"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="Padding" Value="8,4"/>
+			<Setter Property="HorizontalAlignment" Value="Center"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+			<Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+			<!-- scale from center -->
+			<Setter Property="Transitions">
+				<Transitions>
+					<!-- Animate RenderTransform property -->
+					<TransformOperationsTransition Property="RenderTransform"
+												   Duration="0:0:0.15"/>
+				</Transitions>
+			</Setter>
+			<Setter Property="RenderTransform">
+				<ScaleTransform ScaleX="1" ScaleY="1"/>
+			</Setter>
+		</Style>
+		<!-- Hover effect -->
+		<Style Selector="Button:pointerover">
+			<Setter Property="RenderTransform">
+				<ScaleTransform ScaleX="1.08" ScaleY="1.08"/>
+			</Setter>
+		</Style>
+		<!-- TextBox styles to match your theme -->
+		<Style Selector="TextBox">
+			<Setter Property="Background" Value="#3D2B55"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="BorderBrush" Value="#7B5DD9"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="Padding" Value="12,8"/>
+			<Setter Property="FontSize" Value="14"/>
+		</Style>
+		<Style Selector="TextBox:focus">
+			<Setter Property="BorderBrush" Value="#E066FF"/>
+		</Style>
+	</Window.Styles>
 
 	<Grid>
-		<!-- 2 rows: top auto-height, bottom fills remaining -->
+		<!-- Three rows: title / content / footer -->
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="*"/>
-			<RowDefinition Height="*"/>
 			<RowDefinition Height="*"/>
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
 
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width ="*"/>
-			<ColumnDefinition Width ="*"/>
-			<ColumnDefinition Width ="*"/>
-		</Grid.ColumnDefinitions>
+		<!-- Title -->
+		<TextBlock Grid.Row="0"
+				   Text="Pocket"
+				   FontSize="44"
+				   FontWeight="Bold"
+				   Foreground="#E066FF"
+				   HorizontalAlignment="Center"
+				   Margin="0,28,0,12"/>
 
-		<!-- Top row: title -->
-		<TextBlock Grid.Row="0" Grid.Column="1" Text="Pocket" FontSize="20" HorizontalAlignment ="Center"/>
+		<!-- MAIN MENU VIEW -->
+		<StackPanel Grid.Row="1" Name="MainMenuView" IsVisible="True"
+					VerticalAlignment="Center"
+					HorizontalAlignment="Center"
+					Spacing="18">
+			<!-- Join button -->
+			<Border CornerRadius="12" Background="#7B5DD9" Padding="2">
+				<Button Name="JoinButton" Content="Join Session" Background="Transparent" BorderThickness="0"/>
+			</Border>
+			<!-- Host button -->
+			<Border CornerRadius="12" Background="#9C6BD9" Padding="2">
+				<Button Name="HostButton" Content="Host Session" Background="Transparent" BorderThickness="0"/>
+			</Border>
+			<!-- Settings + Quit row -->
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12" Margin="0,6,0,0">
+				<Border CornerRadius="8" Background="#5A3B85" Padding="2">
+					<Button Name="SettingsButton" Content="Settings" Width="120" Height="40" Background="Transparent" BorderThickness="0"/>
+				</Border>
+				<Border CornerRadius="8" Background="#5A3B85" Padding="2">
+					<Button Name="QuitButton" Content="Quit" Width="120" Height="40" Background="Transparent" BorderThickness="0"/>
+				</Border>
+			</StackPanel>
+		</StackPanel>
 
-		<!-- Bottom row: button -->
-		<Button Grid.Row="2" Grid.Column="1" Name="JoinButton" Content="Join Session" HorizontalAlignment ="Center"/>
-		<TextBlock Name ="StatusText" Grid.Row="3" Grid.Column="1" Text="Not Connected" FontSize="20" HorizontalAlignment ="Center"/>
+		<!-- HOST SETUP VIEW -->
+		<StackPanel Grid.Row="1" Name="HostSetupView" IsVisible="False"
+					VerticalAlignment="Center"
+					HorizontalAlignment="Center"
+					Spacing="20" Width="400">
+
+			<TextBlock Text="Create New Session" FontSize="28" FontWeight="Bold"
+					   Foreground="#E066FF" HorizontalAlignment="Center" />
+
+			<StackPanel Spacing="8">
+				<TextBlock Text="Session Name:" FontSize="16" Foreground="#E0D6FF" />
+				<TextBox Name="LobbyNameTextBox" Watermark="Enter session name..." Height="45" />
+			</StackPanel>
+
+			<StackPanel Spacing="8">
+				<TextBlock Text="Password (Optional):" FontSize="16" Foreground="#E0D6FF" />
+				<TextBox Name="PasswordTextBox" Watermark="Enter password..."
+						 PasswordChar="*" Height="45" />
+			</StackPanel>
+
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="15" Margin="0,10,0,0">
+				<Border CornerRadius="8" Background="#5A3B85" Padding="2">
+					<Button Name="HostSetupBackButton" Content="Back" Width="120" Height="45"
+							Background="Transparent" BorderThickness="0"/>
+				</Border>
+				<Border CornerRadius="12" Background="#9C6BD9" Padding="2">
+					<Button Name="CreateSessionButton" Content="Create Session" Width="160" Height="45"
+							Background="Transparent" BorderThickness="0"/>
+				</Border>
+			</StackPanel>
+		</StackPanel>
+
+		<!-- HOST LOBBY VIEW -->
+		<Grid Grid.Row="1" Name="HostLobbyView" IsVisible="False">
+			<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="25">
+
+				<TextBlock Name="LobbyInfoText" FontSize="24" FontWeight="Bold"
+						   Foreground="#E066FF" HorizontalAlignment="Center" />
+
+				<StackPanel Spacing="12">
+					<TextBlock Text="Connected Participants:" FontSize="18"
+							   Foreground="#E0D6FF" HorizontalAlignment="Center" />
+
+					<Border CornerRadius="8" Background="#3D2B55" Padding="12" MinWidth="350">
+						<ListBox Name="ParticipantsListBox" Height="180" Background="Transparent"
+								 BorderThickness="0">
+							<ListBox.Styles>
+								<Style Selector="ListBoxItem">
+									<Setter Property="Foreground" Value="White"/>
+									<Setter Property="Padding" Value="8,6"/>
+									<Setter Property="Margin" Value="0,2"/>
+									<Setter Property="Background" Value="#4A3366"/>
+									<Setter Property="CornerRadius" Value="4"/>
+								</Style>
+								<Style Selector="ListBoxItem:selected">
+									<Setter Property="Background" Value="#7B5DD9"/>
+								</Style>
+							</ListBox.Styles>
+						</ListBox>
+					</Border>
+				</StackPanel>
+
+				<TextBlock Text="Session is running and ready for participants"
+						   FontSize="14" Foreground="#E0D6FF" HorizontalAlignment="Center" />
+
+				<Border CornerRadius="8" Background="#8B4B6B" Padding="2">
+					<Button Name="StopSessionButton" Content="Stop Session" Width="160" Height="45"
+							Background="Transparent" BorderThickness="0"/>
+				</Border>
+			</StackPanel>
+		</Grid>
+
+		<!-- JOIN LOBBY VIEW (placeholder for future implementation) -->
+		<StackPanel Grid.Row="1" Name="JoinLobbyView" IsVisible="False"
+					VerticalAlignment="Center"
+					HorizontalAlignment="Center"
+					Spacing="20" Width="400">
+
+			<TextBlock Text="Join Session" FontSize="28" FontWeight="Bold"
+					   Foreground="#E066FF" HorizontalAlignment="Center" />
+
+			<StackPanel Spacing="8">
+				<TextBlock Text="Session Name:" FontSize="16" Foreground="#E0D6FF" />
+				<TextBox Name="JoinSessionNameTextBox" Watermark="Enter session name..." Height="45" />
+			</StackPanel>
+
+			<StackPanel Spacing="8">
+				<TextBlock Text="Password:" FontSize="16" Foreground="#E0D6FF" />
+				<TextBox Name="JoinPasswordTextBox" Watermark="Enter password..."
+						 PasswordChar="*" Height="45" />
+			</StackPanel>
+
+			<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="15" Margin="0,10,0,0">
+				<Border CornerRadius="8" Background="#5A3B85" Padding="2">
+					<Button Name="JoinBackButton" Content="Back" Width="120" Height="45"
+							Background="Transparent" BorderThickness="0"/>
+				</Border>
+				<Border CornerRadius="12" Background="#7B5DD9" Padding="2">
+					<Button Name="JoinSessionButton" Content="Join Session" Width="160" Height="45"
+							Background="Transparent" BorderThickness="0"/>
+				</Border>
+			</StackPanel>
+		</StackPanel>
+
+		<!-- Footer / status -->
+		<TextBlock Grid.Row="2"
+				   Name="StatusText"
+				   Text="Not Connected"
+				   FontSize="14"
+				   Foreground="#E0D6FF"
+				   HorizontalAlignment="Center"
+				   Margin="0,18,0,18"/>
 	</Grid>
-
 </Window>
