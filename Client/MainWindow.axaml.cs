@@ -13,7 +13,8 @@ namespace Pocket;
 public partial class MainWindow : Window
 {
     private List<Control> allViews;
-    private PocketServer _server; // Add this field
+    private PocketServer _server;
+    private PocketClient _client;
 
     public enum EView
     {
@@ -30,12 +31,13 @@ public partial class MainWindow : Window
         HostButton.Click += OnHostButtonClick;
         CreateSessionButton.Click += StartLocalServer;
         JoinButton.Click += OnJoinButtonClick;
+        JoinSessionButton.Click += OnJoinSessionClick;
         SettingsButton.Click += OnSettingsButtonClick;
         QuitButton.Click += OnQuitButtonClick;
         //back buttons
         HostSetupBackButton.Click += BackToMenu;
         JoinBackButton.Click += BackToMenu;
-        StopSessionButton.Click += StopServer; // Update this line
+        StopSessionButton.Click += StopServer;
     }
 
     // Update the BackToMenu method for StopSessionButton
@@ -47,6 +49,15 @@ public partial class MainWindow : Window
         {
             LobbyNameTextBox.Text = "";
             PasswordTextBox.Text = "";
+        }
+        else if (sender == JoinBackButton)
+        {
+            ServerAddressTextBox.Text = "127.0.0.1";
+            JoinUsernameTextBox.Text = "";
+            JoinSessionNameTextBox.Text = "";
+            JoinPasswordTextBox.Text = "";
+            _client?.Disconnect();
+            _client = null;
         }
     }
 
@@ -66,8 +77,9 @@ public partial class MainWindow : Window
 
     private void OnQuitButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        // Clean up server before quitting
+        // Clean up server and client before quitting
         _server?.Stop();
+        _client?.Disconnect();
         Close();
     }
 
@@ -79,6 +91,65 @@ public partial class MainWindow : Window
     private void OnJoinButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         SetCurrentView(EView.JoinLobbyView);
+    }
+
+    private async void OnJoinSessionClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        string serverAddress = ServerAddressTextBox.Text?.Trim();
+        string username = JoinUsernameTextBox.Text?.Trim();
+        string sessionName = JoinSessionNameTextBox.Text?.Trim();
+        string password = JoinPasswordTextBox.Text?.Trim();
+
+        if (string.IsNullOrEmpty(username))
+        {
+            StatusText.Text = "Please enter a username";
+            return;
+        }
+
+        if (string.IsNullOrEmpty(sessionName))
+        {
+            StatusText.Text = "Please enter a session name";
+            return;
+        }
+
+        if (string.IsNullOrEmpty(serverAddress))
+        {
+            serverAddress = "127.0.0.1";
+        }
+
+        try
+        {
+            JoinSessionButton.IsEnabled = false;
+            JoinSessionButton.Content = "Connecting...";
+            StatusText.Text = "Connecting to session...";
+
+            _client = new PocketClient();
+            _client.StatusUpdate += OnClientStatusUpdate;
+            _client.ParticipantJoined += OnClientParticipantJoined;
+            _client.ParticipantLeft += OnClientParticipantLeft;
+
+            bool success = await _client.ConnectAsync(serverAddress, 8080, username, password, sessionName);
+
+            if (success)
+            {
+                StatusText.Text = "Connected to session";
+            }
+            else
+            {
+                StatusText.Text = "Failed to join session";
+                _client = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = $"Connection failed: {ex.Message}";
+            _client = null;
+        }
+        finally
+        {
+            JoinSessionButton.IsEnabled = true;
+            JoinSessionButton.Content = "Join Session";
+        }
     }
 
     private async void StartLocalServer(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -174,6 +245,31 @@ public partial class MainWindow : Window
         });
     }
 
+    // Client event handlers
+    private void OnClientStatusUpdate(string status)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            StatusText.Text = status;
+        });
+    }
+
+    private void OnClientParticipantJoined(string participant)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            StatusText.Text = $"{participant} joined the session";
+        });
+    }
+
+    private void OnClientParticipantLeft(string participant)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            StatusText.Text = $"{participant} left the session";
+        });
+    }
+
     private void OnHostButtonClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         SetCurrentView(EView.HostSetupView);
@@ -216,6 +312,7 @@ public partial class MainWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         _server?.Stop();
+        _client?.Disconnect();
         base.OnClosed(e);
     }
 }

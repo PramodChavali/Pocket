@@ -164,7 +164,7 @@
 			</StackPanel>
 		</Grid>
 
-		<!-- JOIN LOBBY VIEW (placeholder for future implementation) -->
+		<!-- JOIN LOBBY VIEW -->
 		<StackPanel Grid.Row="1" Name="JoinLobbyView" IsVisible="False"
 					VerticalAlignment="Center"
 					HorizontalAlignment="Center"
@@ -172,6 +172,16 @@
 
 			<TextBlock Text="Join Session" FontSize="28" FontWeight="Bold"
 					   Foreground="#E066FF" HorizontalAlignment="Center" />
+
+			<StackPanel Spacing="8">
+				<TextBlock Text="Server Address:" FontSize="16" Foreground="#E0D6FF" />
+				<TextBox Name="ServerAddressTextBox" Watermark="127.0.0.1" Text="127.0.0.1" Height="45" />
+			</StackPanel>
+
+			<StackPanel Spacing="8">
+				<TextBlock Text="Username:" FontSize="16" Foreground="#E0D6FF" />
+				<TextBox Name="JoinUsernameTextBox" Watermark="Enter your name..." Height="45" />
+			</StackPanel>
 
 			<StackPanel Spacing="8">
 				<TextBlock Text="Session Name:" FontSize="16" Foreground="#E0D6FF" />
