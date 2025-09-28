@@ -47,12 +47,13 @@ public partial class MainWindow : Window
         // Clear form fields when going back
         if (sender == HostSetupBackButton)
         {
+            HostUsernameTextBox.Text = "";
             LobbyNameTextBox.Text = "";
             PasswordTextBox.Text = "";
         }
         else if (sender == JoinBackButton)
         {
-            ServerAddressTextBox.Text = "127.0.0.1";
+            ServerAddressTextBox.Text = "";
             JoinUsernameTextBox.Text = "";
             JoinSessionNameTextBox.Text = "";
             JoinPasswordTextBox.Text = "";
@@ -114,7 +115,8 @@ public partial class MainWindow : Window
 
         if (string.IsNullOrEmpty(serverAddress))
         {
-            serverAddress = "127.0.0.1";
+            StatusText.Text = "Please enter the server address";
+            return;
         }
 
         try
@@ -154,11 +156,16 @@ public partial class MainWindow : Window
 
     private async void StartLocalServer(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        // Grab the name and password
+        // Grab the name, username and password
+        string hostUsername = HostUsernameTextBox.Text?.Trim();
         string lobbyName = LobbyNameTextBox.Text?.Trim();
         string lobbyPassword = PasswordTextBox.Text?.Trim();
 
         // Validate input
+        if (string.IsNullOrEmpty(hostUsername))
+        {
+            hostUsername = "Host";
+        }
         if (string.IsNullOrEmpty(lobbyName))
         {
             StatusText.Text = "Please enter a session name";
@@ -192,6 +199,9 @@ public partial class MainWindow : Window
 
             // Switch to lobby view
             SetCurrentView(EView.HostLobbyView);
+
+            // Add host to participants list
+            ParticipantsListBox.Items.Add($"🟢 {hostUsername} (Host)");
 
             StatusText.Text = "Session ready - waiting for participants";
         }

@@ -102,6 +102,11 @@
 					   Foreground="#E066FF" HorizontalAlignment="Center" />
 
 			<StackPanel Spacing="8">
+				<TextBlock Text="Your Name:" FontSize="16" Foreground="#E0D6FF" />
+				<TextBox Name="HostUsernameTextBox" Watermark="Enter your name..." Height="45" />
+			</StackPanel>
+
+			<StackPanel Spacing="8">
 				<TextBlock Text="Session Name:" FontSize="16" Foreground="#E0D6FF" />
 				<TextBox Name="LobbyNameTextBox" Watermark="Enter session name..." Height="45" />
 			</StackPanel>
@@ -175,7 +180,7 @@
 
 			<StackPanel Spacing="8">
 				<TextBlock Text="Server Address:" FontSize="16" Foreground="#E0D6FF" />
-				<TextBox Name="ServerAddressTextBox" Watermark="127.0.0.1" Text="127.0.0.1" Height="45" />
+				<TextBox Name="ServerAddressTextBox" Watermark="Enter host IP address (e.g. 192.168.1.100)" Height="45" />
 			</StackPanel>
 
 			<StackPanel Spacing="8">
